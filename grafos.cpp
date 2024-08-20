@@ -5,6 +5,7 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <limits>
 
 using namespace std;
 
@@ -34,6 +35,7 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
 void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,vector<string>& state);
+bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) ;
 
 // funções essenciais
 bool eulerian(vector<Edge> *adjList, int numVertex, string direction);
@@ -41,7 +43,6 @@ map<int, vector<int>> tarjanStronglyComponents(vector<Edge> *adjList, int numVer
 void printDephTree(vector<Edge> *adjList, int numVertex);
 vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex);
 vector<Edge>* transitiveClosure(vector<Edge> *adjList, int numVertex);
-
 
 // funções auxiliares
 int getVertexIncomingDegree(int vertex, vector<Edge> *adjList, int numVertex);
@@ -54,7 +55,7 @@ void printAdjList(vector<Edge> *adjList, int numVertex);
 bool connected(vector<Edge> *adjList, int numVertex, string direction);
 vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex);
 int DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
-int dijkstra(int org, vector<Edge>* adjList, int numVertex, vector<int> distance);
+// vector<int> dijkstra(int org, vector<Edge>* adjList, int numVertex);
 
 // funções do gabriel
 bool checkBipartite(vector<Edge> *adjList, int numVertex);
@@ -92,7 +93,7 @@ int main() {
         switch(commands[i]) {
             case 0: {
                 // funcao 1 - paulo silveira - verificar se o grafo é conexo
-                cout << "1 - conectado: " << connected(adjList, numVertex, direction);
+                cout << "1 - conectado: " << connected(adjList, numVertex, direction) << endl;
                 break;
             }
             case 1: {
@@ -138,12 +139,13 @@ int main() {
             }
             case 8: {
                 // deep search tree
-                cout << "9 - deph search tree: ";
+                cout << "9 - arvore de busca em profundidade ";
                 printDephTree(adjList, numVertex);
                 break;
             }
             case 9: {
                 // funcao 10 - paulo silveira
+                cout << "9 - arvore de busca em largura ";
                 break;
             }
             case 10: {
@@ -153,7 +155,7 @@ int main() {
             }
             case 11: {
                 // funcao 12 - paulo alves - ordenação topologica
-                cout << "11 - topologial sort: ";
+                cout << "12 - topologial sort: ";
                 if (direction.compare("direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
                     // se o grafo for direciondo e nao possuir ciclos
                     vector<int> top = kahnTopologicalSort(adjList, numVertex);
@@ -167,19 +169,15 @@ int main() {
                 break;
             }
             case 12: {
-                // funcao 13 - paulo silveira
-                // 13.Valor do caminho mínimo entre dois vértices (para grafos não-orientados com pelo menos um peso diferente nas arestas).  
-                // a)0 é a origem; n-1 é o destino. 
-                if (direction.compare("nao_direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
-                    // DijkstraCaminhoMinimo(adjList, numVertex);
-                    vector<int> distance;
-                    int dijkstra(int org, vector<Edge>* adjList, int numVertex, vector<int> distance);
-                    for (int i = 0; i < distance.size(); i++) 
-                        cout << distance[i] << " ";
-                    cout << endl;
-                } else {
-                    cout << "-1" << endl;
-                }
+                // // funcao 13 - paulo silveira
+                // if (direction.compare("nao_direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
+                //     vector<int> distance = dijkstra(0, adjList, numVertex); // DijkstraCaminhoMinimo(adjList, numVertex);
+                //     for (int i = 0; i < distance.size(); i++) 
+                //         cout << "distancia do vertice 0 ate o vertice " << i << ": " << distance[i];
+                //     cout << endl;
+                // } else {
+                //     cout << "-1" << endl;
+                // }
                 break;
             }
             case 13: {
@@ -201,6 +199,15 @@ int main() {
 
     return 0;
 }
+
+//
+//
+//
+//
+// PARTE PAULO HENRIQUE
+//
+//
+//
 
 bool connected(vector<Edge> *adjList, int numVertex, string direction) {
     bool *visited = new bool[numVertex];
@@ -460,7 +467,7 @@ vector<Edge>* transpose(vector<Edge> *adjList, int numVertex) {
 }
 
 // verificar se o grafo contem ciclo
-bool contemCiclo(vector<Edge> *adjList, int numVertex, string,  direction) {
+bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction) {
     if (direction.compare("nao_direcionado") == 0) {
         // caso o grafo seja nao direcionado
         bool *visited = new bool[numVertex];
@@ -469,16 +476,49 @@ bool contemCiclo(vector<Edge> *adjList, int numVertex, string,  direction) {
             visited[i] = false;
 
         for (int i = 0; i < numVertex; ++i) {
-            if (!visited[i])
-                if (contemCiclo(i, adjList, numVertex, visited));
-                    return true;
+            if (!visited[i] && DFSCiclo(i, adjList, numVertex, visited)) {
+                return true;
+            }    
         }
 
         return false;
     } 
+
+    // caso o grafo seja direcionado
+    vector<string> state(numVertex, "WHITE");
+
+    for (int i = 0; i < numVertex; i++) {
+        if (state[i].compare("WHITE") == 0 && DFSCicloGrafoDirecionado(i, adjList, numVertex, state)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
-// dfs para encontrar ciclos em grafos direcionados
+// dfs para encontrar ciclos
+// grafos nao direcionados
+bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) {
+    // DFS(v, pai):    
+    // visitado[v] = true
+    
+    visited[vertex] = true;
+
+    for (int i = 0; i < adjList[vertex].size(); i++) {
+        int adjVertex = adjList[vertex][i].vertex;
+        
+        if (!visited[adjVertex] && DFSCiclo(adjVertex, adjList, numVertex, visited)) {
+            return true;
+        } else if (adjVertex != vertex) {
+            return true; // Se adjVertex foi visitado e não é o pai, há um ciclo
+        }
+    }
+
+    return false; 
+}
+
+// dfs para encontrar ciclos 
+// grafos direcionados
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex, vector<string>& state) {
     state[vertex] = "GRAY";  // Marca o vértice como "em processo"
 
@@ -495,24 +535,9 @@ bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,
     }
 
     state[vertex] = "BLACK"; 
+
     return false;
 }
-
-// dfs para encontrar ciclos em grafos nao direcionados
-/*bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) {
-    // DFS(v, pai):    
-    // visitado[v] = true
-    
-    // para cada u em vizinhos(v):
-    //     se não visitado[u]:
-    //         se DFS(u, v):
-    //             retorna true
-    //     // Se u foi visitado e não é o pai, encontramos um ciclo
-    //     senão se u ≠ pai:
-    //         retorna true
-            
-    // retorna false
-}*/
 
 // algoritmo de kahn para encontrar ordem topológica
 vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
@@ -588,6 +613,7 @@ void printAdjList(vector<Edge> *adjList, int numVertex) {
 //
 //
 //
+
 /*4 4 
 nao_direcionado 
 0 0 1 1 
@@ -647,50 +673,52 @@ int DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vec
     return low[u];      
 }
 
-int dijkstra(int org, vector<Edge>* adjList, int numVertex, vector<int> distance) {
-    distance.assign(numVertex, 1.0);
+// vector<int> dijkstra(int org, vector<Edge>* adjList, int numVertex) {
+//     vector<int> distance;
+//     distance.assign(numVertex, 1.0);
     
-    // a distance da origem "org" eh sempre zero
-    distance[org] = 1.0;
+//     // a distance da origem "org" eh sempre zero
+//     distance[org] = 0;
     
-    // heap que auxilia na obtencao do vertice com maior prioridade, a cada iteracao
-    priority_queue<Edge, vector<Edge>, greater<Edge>> heap;
+//     // heap que auxilia na obtencao do vertice com maior prioridade, a cada iteracao
+//     priority_queue<Edge, vector<Edge>, greater<Edge>> heap;
 
-    // primeiro par inserido na heap: "org" com custo zero
-    heap.push(Edge(1.0, org));
+//     // primeiro par inserido na heap: "org" com custo zero
+//     heap.push(Edge(0, org));
  
-    vector<bool> visited;
-    visited.assign(numVertex, false);
+//     vector<bool> visited;
+//     visited.assign(numVertex, false);
  
-    // o algoritmo para quando a heap estiver vazia
-    while(!heap.empty()) {
-        Edge vertice = heap.top();
-        heap.pop();
+//     // o algoritmo para quando a heap estiver vazia
+//     while(!heap.empty()) {
+//         Edge vertice = heap.top();
+//         heap.pop();
 
-        double distancia = vertice.weight;
-        int u = vertice.vertex;
+//         double distancia = vertice.weight;
+//         int u = vertice.vertex;
      
-        if(visited[u]) // "u" jah foi explorado
-          continue;
+//         if(visited[u]) // "u" jah foi explorado
+//           continue;
      
-        visited[u] = true;
+//         visited[u] = true;
      
-        double custo;
-        for(int j = 0; j < (int) adjList[u].size(); j++) {
-            Edge vizinho = adjList[u][j];
-            int v = vizinho.vertex;
-            double prob = vizinho.weight;
+//         double custo;
+//         for(int j = 0; j < (int) adjList[u].size(); j++) {
+//             Edge vizinho = adjList[u][j];
+//             int v = vizinho.vertex;
+//             double prob = vizinho.weight;
          
-            // tentativa de melhorar a estimativa de menor caminho da origem ao vertice v
-            custo = distance[u] * prob;
-            if(custo < distance[v]) 
-            { 
-                distance[v] = custo; 
-                heap.push(Edge(distance[v], v)); 
-            }
-        }
-    }
-}
+//             // tentativa de melhorar a estimativa de menor caminho da origem ao vertice v
+//             custo = distance[u] * prob;
+//             if(custo < distance[v]) { 
+//                 distance[v] = custo; 
+//                 heap.push(Edge(distance[v], v)); 
+//             }
+//         }
+//     }
+
+//     return distance;
+// }
 
 // // função para verificar se a aresta u-v é uma ponte
 // bool ehPonte(int u, int v) {
