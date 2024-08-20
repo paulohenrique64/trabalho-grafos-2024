@@ -66,6 +66,7 @@ bool connected(vector<Edge> *adjList, int numVertex, string direction);
 vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex);
 void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
 void dijkstra(int org, vector<Edge>* adjList, int numVertex);
+//void dijkstra(int org, vector<pair<int, int>>* adjList, int numVertex);
 
 // funções do gabriel
 int edmondsKarp(const vector<vector<int>>& capacity, int source, int sink);
@@ -191,8 +192,10 @@ int main() {
                 break;
             }
             case 12: {// paulo silveira
+                //vector<pair<int, int>>* adjList = adjList;
                 if (direction.compare("nao_direcionado") == 0) {
                     dijkstra(0, adjList, numVertex);
+
                 } else {
                     cout << "-1" << endl;
                 }
@@ -741,49 +744,42 @@ void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, ve
 }
 
 void dijkstra(int org, vector<Edge>* adjList, int numVertex) {
-    vector<int> distance(numVertex, INT_MAX);
-
-    // A distância da origem "org" é sempre zero
-    distance[org] = 0;
-
-    // Heap que auxilia na obtenção do vértice com maior prioridade a cada iteração
-    priority_queue<Edge, vector<Edge>, greater<Edge>> heap;
-
-    // Primeiro par inserido na heap: "org" com custo zero
-    heap.push(Edge(org, 0));
-
+    vector<int> dist(numVertex, INT_MAX); 
     vector<bool> visited(numVertex, false);
 
-    // O algoritmo para quando a heap estiver vazia
-    while (!heap.empty()) {
-        Edge vertice = heap.top();
-        heap.pop();
+    dist[org] = 0; // A distância da origem para ela mesma é 0
 
-        int u = vertice.vertex;
-        int distancia = vertice.weight;
+    // Usando uma priority_queue para obter o vértice com a menor distância
+    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
+    pq.push(make_pair(0, org));
 
-        if (visited[u]) // "u" já foi explorado
+    while (!pq.empty()) {
+        int currentVertex = pq.top().second;
+        pq.pop();
+
+        if (visited[currentVertex]) 
             continue;
 
-        visited[u] = true;
+        visited[currentVertex] = true;
 
-        for (int j = 0; j < adjList[u].size(); j++) {
-            Edge vizinho = adjList[u][j];
-            int v = vizinho.vertex;
-            int custo = distancia + vizinho.weight;
-
-            if (custo < distance[v]) {
-                distance[v] = custo;
-                heap.push(Edge(v, custo));
+        for (const Edge& edge : adjList[currentVertex]) {
+            int adjVertex = edge.vertex;
+            int weight = edge.weight;
+            int cost = dist[currentVertex] + weight;
+            
+            // Verifica se existe um caminho mais curto para adjVertex através de currentVertex
+            if (cost < dist[adjVertex]) {
+                dist[adjVertex] = cost;
+                pq.push(make_pair(dist[adjVertex], adjVertex));
             }
         }
     }
 
     // Verifica se há um caminho para o último vértice
-    if (distance[numVertex - 1] == INT_MAX) {
+    if (dist[numVertex - 1] == INT_MAX) {
         cout << "-1" << endl;
     } else {
-        cout << distance[numVertex - 1] << endl;
+        cout << dist[numVertex - 1] << endl;
     }
 }
 
