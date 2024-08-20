@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <limits>
+#include <climits>
 
 using namespace std;
 
@@ -25,6 +26,9 @@ struct Edge {
 
     bool operator<(const Edge& other) const {
         return weight < other.weight; // necessário para o algoritmo de Kruskal
+    }
+    bool operator>(const Edge& other) const {
+        return this->weight > other.weight; //necessario para o algortimo de dijkistra
     }
 };
 
@@ -54,8 +58,8 @@ void printAdjList(vector<Edge> *adjList, int numVertex);
 // funcoes do paulo silveira
 bool connected(vector<Edge> *adjList, int numVertex, string direction);
 vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex);
-int DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
-// vector<int> dijkstra(int org, vector<Edge>* adjList, int numVertex);
+void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
+void dijkstra(int org, vector<Edge>* adjList, int numVertex);
 
 // funções do gabriel
 bool checkBipartite(vector<Edge> *adjList, int numVertex);
@@ -113,34 +117,44 @@ int main() {
             }
             case 4: {
                 // funcao 5 - gabriel 
-                cout << "5 - connected components:" << countConnectedComponents(numVertex, adjList) << endl;
+                //cout << "5 - connected components:" << countConnectedComponents(numVertex, adjList) << endl;
                 break;
             }
             case 5: {
                 // funcao 6 - paulo alves - strongly components
-                map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
-                cout << "6 - amount of strongly components: " << stronglyComponents.size() << endl;
+                //map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
+                //cout << "6 - amount of strongly components: " << stronglyComponents.size() << endl;
                 break;
             }
             case 6: {
                 // funcao 7 - paulo silveira
-                /*cout << "6 - ariculacoes: ";
-                vector<int> articulacoes = getArticulacoes(adjList, numVertex);
-                for (int i = 0; i < articulacoes.size(); i++) 
-                    cout << articulacoes[i] << " ";
-                cout << endl;*/
+                cout << "6 - articulacoes: ";
+                if (direction.compare("nao_direcionado") == 0) {
+                    vector<int> articulacoes = getArticulacoes(adjList, numVertex);
+
+                    if(articulacoes.empty()) {
+                        cout << "0" << endl;
+                    }
+                    else {
+                        for (int i = 0; i < articulacoes.size(); i++) 
+                            cout << articulacoes[i] << " ";
+                        cout << endl;
+                    }
+                } else {
+                    cout << "-1" << endl;
+                }
                 break;
             }
             case 7: {
                 // funcao 8 - gabriel
-                vector<Edge> bridges = getBridges(adjList, numVertex);
-                cout << "7 - num bridges: " << bridges.size() << endl;
+                //vector<Edge> bridges = getBridges(adjList, numVertex);
+                //cout << "7 - num bridges: " << bridges.size() << endl;
                 break;
             }
             case 8: {
                 // deep search tree
                 cout << "9 - arvore de busca em profundidade ";
-                printDephTree(adjList, numVertex);
+                //printDephTree(adjList, numVertex);
                 break;
             }
             case 9: {
@@ -156,7 +170,7 @@ int main() {
             case 11: {
                 // funcao 12 - paulo alves - ordenação topologica
                 cout << "12 - topologial sort: ";
-                if (direction.compare("direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
+                if (direction.compare("direcionado") == 0) {
                     // se o grafo for direciondo e nao possuir ciclos
                     vector<int> top = kahnTopologicalSort(adjList, numVertex);
 
@@ -169,15 +183,13 @@ int main() {
                 break;
             }
             case 12: {
-                // // funcao 13 - paulo silveira
-                // if (direction.compare("nao_direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
-                //     vector<int> distance = dijkstra(0, adjList, numVertex); // DijkstraCaminhoMinimo(adjList, numVertex);
-                //     for (int i = 0; i < distance.size(); i++) 
-                //         cout << "distancia do vertice 0 ate o vertice " << i << ": " << distance[i];
-                //     cout << endl;
-                // } else {
-                //     cout << "-1" << endl;
-                // }
+                // funcao 13 - paulo silveira
+                cout << "12 - caminho mínimo: ";
+                if (direction.compare("nao_direcionado") == 0) {
+                    dijkstra(0, adjList, numVertex);
+                } else {
+                    cout << "-1" << endl;
+                }
                 break;
             }
             case 13: {
@@ -614,13 +626,6 @@ void printAdjList(vector<Edge> *adjList, int numVertex) {
 //
 //
 
-/*4 4 
-nao_direcionado 
-0 0 1 1 
-1 1 2 1 
-2 1 3 1 
-3 2 3 1 
-*/
 // retorna um vetor contendo todos vertices articulacoes
 vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex) {
     vector<int> visitedOrder(numVertex, -1), low(numVertex, -1), parent(numVertex, -1), ans;
@@ -636,7 +641,7 @@ vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex) {
 }
 
 // dfs para o algoritmo de encontrar articulacoes
-int DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans) {  
+void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans) {  
     visitedOrder[u] = low[u] = time_s++;
     int filhos = 0;
 
@@ -649,76 +654,70 @@ int DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vec
     for (int i = 0; i < adjList[u].size(); i++) {
         int adjVertex = adjList[u][i].vertex;
 
-        if (visitedOrder[adjVertex] == -1) {
-            // caso o vertice adjacente nao tenha sido visitado
+         if (visitedOrder[adjVertex] == -1) {  // Vértice adjacente ainda não visitado
             filhos++;
             parent[adjVertex] = u;
              
-            int m = DFSArticulacoes(adjVertex, adjList, visitedOrder, low, parent, ans);
+            DFSArticulacoes(adjVertex, adjList, visitedOrder, low, parent, ans);
             
             low[u] = min(low[u], low[adjVertex]);
 
-             // Verifica se u é um ponto de articulação
-            if (parent[u] == -1 && filhos > 1) {
-                ans.push_back(u);  // Raiz com mais de um filho na DFS
-            }
-            if (parent[u] != -1 && low[adjVertex] >= visitedOrder[u]) {
-                ans.push_back(u);
+            // Verifica se u é um ponto de articulação
+            if ((parent[u] == -1 && filhos > 1) || (parent[u] != -1 && low[adjVertex] >= visitedOrder[u])) {
+                ans.push_back(u);  // u é um ponto de articulação
             }
         } else if (adjVertex != parent[u]) {  // Atualiza low[u] para back edge
             low[u] = min(low[u], visitedOrder[adjVertex]);
         }
-    } 
-
-    return low[u];      
+    }  
 }
 
-// vector<int> dijkstra(int org, vector<Edge>* adjList, int numVertex) {
-//     vector<int> distance;
-//     distance.assign(numVertex, 1.0);
-    
-//     // a distance da origem "org" eh sempre zero
-//     distance[org] = 0;
-    
-//     // heap que auxilia na obtencao do vertice com maior prioridade, a cada iteracao
-//     priority_queue<Edge, vector<Edge>, greater<Edge>> heap;
+void dijkstra(int org, vector<Edge>* adjList, int numVertex) {
+    vector<int> distance(numVertex, INT_MAX);
 
-//     // primeiro par inserido na heap: "org" com custo zero
-//     heap.push(Edge(0, org));
- 
-//     vector<bool> visited;
-//     visited.assign(numVertex, false);
- 
-//     // o algoritmo para quando a heap estiver vazia
-//     while(!heap.empty()) {
-//         Edge vertice = heap.top();
-//         heap.pop();
+    // A distância da origem "org" é sempre zero
+    distance[org] = 0;
 
-//         double distancia = vertice.weight;
-//         int u = vertice.vertex;
-     
-//         if(visited[u]) // "u" jah foi explorado
-//           continue;
-     
-//         visited[u] = true;
-     
-//         double custo;
-//         for(int j = 0; j < (int) adjList[u].size(); j++) {
-//             Edge vizinho = adjList[u][j];
-//             int v = vizinho.vertex;
-//             double prob = vizinho.weight;
-         
-//             // tentativa de melhorar a estimativa de menor caminho da origem ao vertice v
-//             custo = distance[u] * prob;
-//             if(custo < distance[v]) { 
-//                 distance[v] = custo; 
-//                 heap.push(Edge(distance[v], v)); 
-//             }
-//         }
-//     }
+    // Heap que auxilia na obtenção do vértice com maior prioridade a cada iteração
+    priority_queue<Edge, vector<Edge>, greater<Edge>> heap;
 
-//     return distance;
-// }
+    // Primeiro par inserido na heap: "org" com custo zero
+    heap.push(Edge(org, 0));
+
+    vector<bool> visited(numVertex, false);
+
+    // O algoritmo para quando a heap estiver vazia
+    while (!heap.empty()) {
+        Edge vertice = heap.top();
+        heap.pop();
+
+        int u = vertice.vertex;
+        int distancia = vertice.weight;
+
+        if (visited[u]) // "u" já foi explorado
+            continue;
+
+        visited[u] = true;
+
+        for (int j = 0; j < adjList[u].size(); j++) {
+            Edge vizinho = adjList[u][j];
+            int v = vizinho.vertex;
+            int custo = distancia + vizinho.weight;
+
+            if (custo < distance[v]) {
+                distance[v] = custo;
+                heap.push(Edge(v, custo));
+            }
+        }
+    }
+
+    // Verifica se há um caminho para o último vértice
+    if (distance[numVertex - 1] == INT_MAX) {
+        cout << "-1" << endl;
+    } else {
+        cout << distance[numVertex - 1] << endl;
+    }
+}
 
 // // função para verificar se a aresta u-v é uma ponte
 // bool ehPonte(int u, int v) {
