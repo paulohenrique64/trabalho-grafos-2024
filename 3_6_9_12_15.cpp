@@ -66,10 +66,6 @@ int main() {
     map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
     cout << "6 - amount of strongly components: " << stronglyComponents.size() << endl;
 
-    // deep search tree
-    cout << "9 - deph search tree: ";
-    printDephTree(adjList, numVertex);
-
     // topological sort
     cout << "12 - topologial sort: ";
     if (direction.compare("direcionado") == 0 and !containsCycle(adjList, numVertex)) {
