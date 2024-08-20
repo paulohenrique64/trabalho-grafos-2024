@@ -28,14 +28,14 @@ struct Edge {
         return vertex == other.vertex;
     }
 
-    bool operator<(const Edge& other) const {
-        return weight < other.weight; // necessário para o algoritmo de Kruskal
-    }
-    bool operator>(const Edge& other) const {
-        return this->weight > other.weight; //necessario para o algortimo de dijkistra
-    }
-};
+    // bool operator<(const Edge& other) const {
+    //     return weight < other.weight; // necessário para o algoritmo de Kruskal
+    // }
 
+    // bool operator>(const Edge& other) const {
+    //     return this->weight > other.weight; //necessario para o algortimo de dijkistra
+    // }
+};
 
 // dfs e bfs
 void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& reached);
@@ -44,22 +44,22 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
 void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,vector<string>& state);
-bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) ;
+bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited);
 
 // funções essenciais
-bool eulerian(vector<Edge> *adjList, int numVertex, string direction);
-map<int, vector<int>> tarjanStronglyComponents(vector<Edge> *adjList, int numVertex);
-void printDephTree(vector<Edge> *adjList, int numVertex);
-void printBreadthTree(vector<Edge> *adjList, int numVertex);
-vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex);
+bool euleriano(vector<Edge> *adjList, int numVertex, string direction);
+map<int, vector<int>> tarjanComponentesFortementeConectados(vector<Edge> *adjList, int numVertex);
+void imprimirArvoreProfundidade(vector<Edge> *adjList, int numVertex);
+void imprimirArvoreLargura(vector<Edge> *adjList, int numVertex);
+vector<int> kahnOrdernacaoTopologica(vector<Edge> *adjList, int numVertex);
 void fechoTransitivo(vector<Edge> *adjList, int numVertex);
 
 // funções auxiliares
-int getVertexIncomingDegree(int vertex, vector<Edge> *adjList, int numVertex);
+int numeroVerticesEntrada(int vertex, vector<Edge> *adjList, int numVertex);
 bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction);
-vector<Edge>* transpose(vector<Edge> *adjList, int numVertex);
-bool stronglyConnected(vector<Edge> *adjList, int numVertex);
-void printAdjList(vector<Edge> *adjList, int numVertex);
+vector<Edge>* transposta(vector<Edge> *adjList, int numVertex);
+bool fortementeConectado(vector<Edge> *adjList, int numVertex);
+void imprimirListaAdjacencia(vector<Edge> *adjList, int numVertex);
 
 // funcoes do paulo silveira
 bool connected(vector<Edge> *adjList, int numVertex, string direction);
@@ -68,13 +68,14 @@ void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, ve
 void dijkstra(int org, vector<Edge>* adjList, int numVertex);
 
 // funções do gabriel
+int edmondsKarp(const vector<vector<int>>& capacity, int source, int sink);
+int kruskal(int numVertex, vector<vector<int>>& capacity);
+void getBridges(vector<Edge> *adjList, int numVertex);
 bool checkBipartite(vector<Edge> *adjList, int numVertex);
 int countConnectedComponents(int numVertex, vector<Edge> *adjList);
 void DFSConnectedComponents(int vertex, vector<Edge> *adjList, vector<bool>& visited);
 void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges);
-vector<Edge> getBridges(vector<Edge> *adjList, int numVertex);
 
-// 2 5 8 11 14
 int main() {
     int command, numVertex, numEdges, edgeId, vertexU, vertexV, weight;
     vector<Edge> *adjList = nullptr;
@@ -89,6 +90,9 @@ int main() {
 
     cin >> numVertex >> numEdges >> direction; // ler o numero de vertices, numero de arestas e se o grafo e direcionado
     adjList = new vector<Edge>[numVertex]; 
+
+    vector<vector<int>> capacity(numVertex, vector<int>(numVertex, 0)); // Vetor usado em fluxo máximo
+    vector<Edge> edges; // Vetor de arestas para o algoritmo de Kruskal
 
     for (int i = 0; i < numEdges; i++) {
         // preenche a lista de adjacência
@@ -111,27 +115,30 @@ int main() {
                 break;
             }
             case 2: {// paulo alves
-                cout << eulerian(adjList, numVertex, direction) << endl;
+                cout << euleriano(adjList, numVertex, direction) << endl;
                 break;
             }
             case 3: {// paulo silveira
                 cout << contemCiclo(adjList, numVertex, direction) << endl;
                 break;
             }
-            case 4: {
-                // funcao 5 - gabriel 
-                //cout << "5 - connected components:" << countConnectedComponents(numVertex, adjList) << endl;
+            case 4: {// gabriel
+                if (direction.compare("nao_direcionado") == 0)
+                    cout << countConnectedComponents(numVertex, adjList) << endl;
+                else
+                    cout << "-1" << endl;
                 break;
             }
-            case 5: {
-                // funcao 6 - paulo alves - strongly components
-                //map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
-                //cout << "6 - amount of strongly components: " << stronglyComponents.size() << endl;
+            case 5: {// paulo alves
+                if (direction.compare("direcionado") == 0) {
+                    map<int, vector<int>> stronglyComponents = tarjanComponentesFortementeConectados(adjList, numVertex);
+                    cout << stronglyComponents.size() << endl;
+                } else {
+                    cout << "-1" << endl;
+                }           
                 break;
             }
-            case 6: {
-                // funcao 7 - paulo silveira
-                cout << "6 - articulacoes: ";
+            case 6: {// paulo silveira
                 if (direction.compare("nao_direcionado") == 0) {
                     vector<int> articulacoes = getArticulacoes(adjList, numVertex);
 
@@ -150,43 +157,40 @@ int main() {
             }
             case 7: {
                 // funcao 8 - gabriel
-                //vector<Edge> bridges = getBridges(adjList, numVertex);
-                //cout << "7 - num bridges: " << bridges.size() << endl;
+                if (direction.compare("nao_direcionado") == 0)
+                    getBridges(adjList, numVertex);
+                else
+                    cout << "-1";
                 break;
             }
-            case 8: {
-                // deep search tree
-                cout << "9 - arvore de busca em profundidade ";
-                //printDephTree(adjList, numVertex);
+            case 8: {// paulo alves
+                imprimirArvoreProfundidade(adjList, numVertex);
                 break;
             }
             case 9: {// paulo silveira
-                printBreadthTree(adjList, numVertex);
+                imprimirArvoreLargura(adjList, numVertex);
                 break;
             }
             case 10: {
-                cout << "-1" << endl;
+                // funcao 11 - gabriel
+                if (direction.compare("nao_direcionado") == 0) {
+                    int mstWeight = kruskal(numVertex, capacity);
+                    cout << "11 - Kruskal MST weight: " << mstWeight << endl;
+                }
                 break;
-            }
-            case 11: {
-                // funcao 12 - paulo alves - ordenação topologica
-                cout << "12 - topologial sort: ";
-                if (direction.compare("direcionado") == 0) {
-                    // se o grafo for direciondo e nao possuir ciclos
-                    vector<int> top = kahnTopologicalSort(adjList, numVertex);
 
-                    for (int i = 0; i < top.size(); i++) {
+            }
+            case 11: {// paulo alves
+                if (direction.compare("direcionado") == 0) {
+                    vector<int> top = kahnOrdernacaoTopologica(adjList, numVertex);
+                    for (int i = 0; i < top.size(); i++) 
                         cout << top[i] << " ";
-                    }
-                    cout << endl;
                 } else {
                     cout << "-1" << endl;
                 }
                 break;
             }
-            case 12: {
-                // funcao 13 - paulo silveira
-                cout << "12 - caminho mínimo: ";
+            case 12: {// paulo silveira
                 if (direction.compare("nao_direcionado") == 0) {
                     dijkstra(0, adjList, numVertex);
                 } else {
@@ -195,7 +199,10 @@ int main() {
                 break;
             }
             case 13: {
-                cout << "-1" << endl;
+                if (direction.compare("nao_direcionado") == 0)
+                    cout << "-1" << endl;
+                else
+                    cout << edmondsKarp(capacity, 0, numVertex - 1);
                 break;
             }
             case 14: {// paulo alves
@@ -253,8 +260,8 @@ bool connected(vector<Edge> *adjList, int numVertex, string direction) {
 }
 
 
-// verificar se o grafo é euleriano
-bool eulerian(vector<Edge> *adjList, int numVertex, string direction) {
+// verificar se o grafo é eulerianoo
+bool euleriano(vector<Edge> *adjList, int numVertex, string direction) {
     int numOddDegreeVertex = 0;
 
     if (direction.compare("nao_direcionado") == 0) {
@@ -280,10 +287,10 @@ bool eulerian(vector<Edge> *adjList, int numVertex, string direction) {
     } 
     
     // caso o grafo seja direcionado
-    map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
+    map<int, vector<int>> stronglyComponents = tarjanComponentesFortementeConectados(adjList, numVertex);
 
-    if (!stronglyConnected(adjList, numVertex))
-        // se o grafo nao for fortemente conectado, ele nao é euleriano
+    if (!fortementeConectado(adjList, numVertex))
+        // se o grafo nao for fortemente conectado, ele nao é eulerianoo
         return false;
 
     // se o grafo for fortemente conectado, verifica se em cada vértice
@@ -307,12 +314,12 @@ bool eulerian(vector<Edge> *adjList, int numVertex, string direction) {
     }
 
 
-    // se o grafo direcionado for euleriano
+    // se o grafo direcionado for eulerianoo
     return true;
 }
 
 // algoritmo de tarjan para encontrar as componentes fortementes conectadas em grafos direcionados
-map<int, vector<int>> tarjanStronglyComponents(vector<Edge> *adjList, int numVertex) {
+map<int, vector<int>> tarjanComponentesFortementeConectados(vector<Edge> *adjList, int numVertex) {
     int *pre = new int[numVertex];
     int *lo = new int[numVertex];
     bool *stackMember = new bool[numVertex];
@@ -345,7 +352,7 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
     sc.push(vertex);
     stackMember[vertex] = true;
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -381,7 +388,7 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
 }
 
 // verifica se o grafo é fortemente conectado
-bool stronglyConnected(vector<Edge> *adjList, int numVertex) {
+bool fortementeConectado(vector<Edge> *adjList, int numVertex) {
     int initialVertex = 0;
     bool* visited = new bool[numVertex];
     
@@ -397,7 +404,7 @@ bool stronglyConnected(vector<Edge> *adjList, int numVertex) {
         visited[i] = false;
     }
 
-    vector<Edge> *trans = transpose(adjList, numVertex);
+    vector<Edge> *trans = transposta(adjList, numVertex);
 
     DFS(initialVertex, trans, numVertex, visited);
 
@@ -412,7 +419,7 @@ void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, v
     visited[vertex] = true;
     reached.push_back(vertex);
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -426,7 +433,7 @@ void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, v
 void DFS(int vertex, vector<Edge> *adjList, int numVertex, bool* visited) {
     visited[vertex] = true;
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -436,7 +443,7 @@ void DFS(int vertex, vector<Edge> *adjList, int numVertex, bool* visited) {
     }
 }
 
-void printDephTree(vector<Edge> *adjList, int numVertex) {
+void imprimirArvoreProfundidade(vector<Edge> *adjList, int numVertex) {
     int initialVertex = 0;
     bool* visited = new bool[numVertex];
     vector<int> order;
@@ -451,7 +458,7 @@ void printDephTree(vector<Edge> *adjList, int numVertex) {
     cout << endl;
 }
 
-void printBreadthTree(vector<Edge> *adjList, int numVertex) {
+void imprimirArvoreLargura(vector<Edge> *adjList, int numVertex) {
     int initialVertex = 0;
     bool* visited = new bool[numVertex];
     vector<int> order;
@@ -476,7 +483,7 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
         int vertex = q.front();
         q.pop();
 
-        sort(adjList[vertex].begin(), adjList[vertex].end());
+        // sort(adjList[vertex].begin(), adjList[vertex].end());
 
         for (int i = 0; i < adjList[vertex].size(); i++) {
             int adjVertex = adjList[vertex][i].vertex;
@@ -493,7 +500,7 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order) {
     visited[vertex] = true;
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -505,7 +512,7 @@ void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, ve
     }
 }
 
-vector<Edge>* transpose(vector<Edge> *adjList, int numVertex) {
+vector<Edge>* transposta(vector<Edge> *adjList, int numVertex) {
     vector<Edge> *trans = new vector<Edge>[numVertex];
 
     for (int i = 0; i < numVertex; i++) 
@@ -553,7 +560,7 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
     
     visited[vertex] = true;
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -573,7 +580,7 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex, vector<string>& state) {
     state[vertex] = "GRAY";  // Marca o vértice como "em processo"
 
-    sort(adjList[vertex].begin(), adjList[vertex].end());
+    // sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -593,7 +600,7 @@ bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,
 }
 
 // algoritmo de kahn para encontrar ordem topológica
-vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
+vector<int> kahnOrdernacaoTopologica(vector<Edge> *adjList, int numVertex) {
     vector<int> top; // armazenar a ordenação topológica
     vector<int> inDegree(numVertex, 0); // grau de entrada dos vértices
     vector<Edge> *newAdjList = new vector<Edge>[numVertex]; // armazenar a nova versao nao direcionada
@@ -610,15 +617,6 @@ vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
         }
     }
 
-    // calcula o grau de entrada de cada vértice
-    for (int i = 0; i < numVertex; i++) {
-        for (int j = 0; j < adjList[i].size(); j++) {
-            int adjVertex = adjList[i][j].vertex;
-            if (adjVertex == 0)
-                cout << "\n\ntem alguem apontando para o zero\n\n";
-        }
-    }
-
     // adiciona todos os vértices com grau de entrada zero na fila
     for (int i = 0; i < numVertex; i++) {
         if (inDegree[i] == 0) {
@@ -626,18 +624,10 @@ vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
         }
     }
 
-    // cout << "\n\nzero degree queue\n\n\n";
-    // for (int i = 0; i  <zeroDegreeQueue.size(); i++) {
-    //     cout << zeroDegreeQueue.front() << " ";
-    //     zeroDegreeQueue.pop();
-    // }
-
     while (!zeroDegreeQueue.empty()) {
         int u = zeroDegreeQueue.top();
         zeroDegreeQueue.pop();
         top.push_back(u);
-
-        //sort(adjList[u].begin(), adjList[u].end());
 
         // reduz o grau de entrada dos vizinhos
         for (int i = 0; i < newAdjList[u].size(); i++) {
@@ -660,7 +650,7 @@ vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
     return top;
 }
 
-int getVertexIncomingDegree(int vertex, vector<Edge> *adjList, int numVertex) {
+int numeroVerticesEntrada(int vertex, vector<Edge> *adjList, int numVertex) {
     int count = 0; 
 
     for (int i = 0; i < numVertex; i++) 
@@ -686,7 +676,7 @@ void fechoTransitivo(vector<Edge> *adjList, int numVertex) {
     }
 }
 
-void printAdjList(vector<Edge> *adjList, int numVertex) {
+void imprimirListaAdjacencia(vector<Edge> *adjList, int numVertex) {
     for (int i = 0; i < numVertex; i++) {
         cout << "[" << i << "] -> ";
         for (int j = 0; j < adjList[i].size(); j++)
@@ -797,71 +787,6 @@ void dijkstra(int org, vector<Edge>* adjList, int numVertex) {
     }
 }
 
-// // função para verificar se a aresta u-v é uma ponte
-// bool ehPonte(int u, int v) {
-//     // 1: Verifica quantos vértices são acessíveis antes de remover a aresta (conexo)
-//     vector<bool> visitado(V, false);
-//     int idFunc = 7;
-//     DFS(u, visitado, idFunc);
-
-//     int contAntes = count(visitado.begin(), visitado.end(), true);
-
-//     // 2: Remove a aresta u-v e verifica quantos vértices são acessíveis depois de remover a aresta
-//     removeAresta(u, v);
-//     fill(visitado.begin(), visitado.end(), false);
-//     DFS(u, visitado, idFunc);
-//     int contDepois = count(visitado.begin(), visitado.end(), true);
-
-//     // 3: Recoloca a aresta u-v no grafo
-//     adj[u].push_back({v, {0, 0}}); // id_aresta e custo são placeholders
-//     if (!ehDirecionado) adj[v].push_back({u, {0, 0}});
-
-//     // Se o número de vértices acessíveis diminuir, u-v é uma ponte
-//     return (contAntes > contDepois);
-// }
-
-// // Encontra e imprime a trilha euleriana
-// void trilhaEuleriana(int u) {
-//     for (auto& v : adj[u]) {
-//         int vAtual = v.first;
-
-//         // Verifica se a aresta u-vAtual é válida para a trilha euleriana
-//         if (adj[u].size() == 1 || !ehPonte(u, vAtual)) {
-//             cout << u << " ";
-
-//             removeAresta(u, vAtual);
-//             trilhaEuleriana(vAtual);
-//         }
-//     }
-// }
-/*
-bool verificaTrilhaEuleriana(int& inicio) {
-    int startNodes = 0, endNodes = 0;
-
-    for (int i = 0; i < V; ++i) {
-        if (ehDirecionado) {
-            if (grauSaida[i] - grauEntrada[i] == 1) {
-                inicio = i;
-                startNodes++;
-            } else if (grauEntrada[i] - grauSaida[i] == 1) {
-                endNodes++;
-            } else if (grauEntrada[i] != grauSaida[i]) {
-                return false;
-            }
-        } else {
-            if (grauSaida[i] % 2 == 1) {
-                startNodes++;
-                inicio = i;
-            }
-        }
-    }
-
-    return ehDirecionado ? 
-        (startNodes == 1 && endNodes == 1) || (startNodes == 0 && endNodes == 0) :
-        (startNodes == 0 || startNodes == 2);
-}
-*/
-
 //
 //
 //
@@ -930,112 +855,92 @@ int countConnectedComponents(int numVertex, vector<Edge> *adjList) {
 }
 
 
-// DFS para encontrar pontes
 void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges) {
-    visitedOrder[u] = low[u] = time_s++;
-    
+    static int time = 0;
+    visitedOrder[u] = low[u] = ++time;
+
     for (int i = 0; i < adjList[u].size(); i++) {
         int v = adjList[u][i].vertex;
 
-        if (v == parent) continue;  // Ignora a aresta para o pai
-
-        if (visitedOrder[v] == -1) {  // Se o vértice não foi visitado
+        if (visitedOrder[v] == -1) { // se v não foi visitado
             DFSBridges(v, u, adjList, numVertex, visitedOrder, low, bridges);
             low[u] = min(low[u], low[v]);
 
-            // Se a condição de ponte for satisfeita, adiciona a ponte
+            // Se a menor ordem de visita de v é maior que a ordem de visita de u, então (u, v) é uma ponte
             if (low[v] > visitedOrder[u]) {
-                bridges.push_back(Edge(u, v));
+                bridges.push_back(Edge(v, adjList[u][i].weight, adjList[u][i].id)); // Aqui estamos assumindo que o ID é o mesmo para ambos os sentidos
             }
-        } else {
+        } else if (v != parent) { // Atualiza o valor de low[u] se v foi visitado e não é o pai de u
             low[u] = min(low[u], visitedOrder[v]);
         }
     }
 }
 
-// retorna um vetor contendo todas as pontes (arestas)
-vector<Edge> getBridges(vector<Edge> *adjList, int numVertex) {
-    vector<int> visitedOrder(numVertex, -1), low(numVertex, -1);
+void getBridges(vector<Edge> *adjList, int numVertex) {
+    vector<int> visitedOrder(numVertex, -1);
+    vector<int> low(numVertex, -1);
     vector<Edge> bridges;
-    int initialVertex = 0;
-    time_s = 0;
 
-    // Percorre todos os vértices, para garantir que todas as componentes sejam exploradas
     for (int i = 0; i < numVertex; i++) {
         if (visitedOrder[i] == -1) {
             DFSBridges(i, -1, adjList, numVertex, visitedOrder, low, bridges);
         }
     }
 
-    return bridges;
+    for (const Edge& bridge : bridges) {
+        cout << bridge.id << " ";
+    }
+    cout << endl;
 }
 
-
-// Função para encontrar o conjunto de um elemento (Union-Find)
-int find(int parent[], int i) {
-    if (parent[i] == i)
-        return i;
-    return find(parent, parent[i]);
+int find(int u, vector<int>& parent) {
+    if (u != parent[u])
+        parent[u] = find(parent[u], parent);
+    return parent[u];
 }
 
-// Função para unir dois conjuntos (Union-Find)
-void Union(int parent[], int rank[], int x, int y) {
-    int xroot = find(parent, x);
-    int yroot = find(parent, y);
-
-    if (xroot != yroot) {
-        if (rank[xroot] < rank[yroot])
-            parent[xroot] = yroot;
-        else if (rank[xroot] > rank[yroot])
-            parent[yroot] = xroot;
+void merge(int u, int v, vector<int>& parent, vector<int>& rank) {
+    int rootU = find(u, parent);
+    int rootV = find(v, parent);
+    if (rootU != rootV) {
+        if (rank[rootU] < rank[rootV])
+            parent[rootU] = rootV;
+        else if (rank[rootU] > rank[rootV])
+            parent[rootV] = rootU;
         else {
-            parent[yroot] = xroot;
-            rank[xroot]++;
+            parent[rootV] = rootU;
+            rank[rootU]++;
         }
     }
 }
 
-
-// Algoritmo de Kruskal para encontrar a Árvore Geradora Mínima (MST)
-vector<Edge> kruskalMST(vector<Edge> *adjList, int numVertex) {
-    vector<Edge> result; // Armazena a MST
+int kruskal(int numVertex, vector<vector<int>>& capacity) {
     vector<Edge> edges;
-    int *parent = new int[numVertex];
-    int *rank = new int[numVertex];
+    for (int u = 0; u < numVertex; ++u) {
+        for (int v = 0; v < numVertex; ++v) {
+            if (capacity[u][v] > 0) {
+                edges.push_back(Edge(u, capacity[u][v], v));
+            }
+        }
+    }
 
-    // Inicializa o conjunto
-    for (int i = 0; i < numVertex; i++) {
+    // sort(edges.begin(), edges.end());
+
+    vector<int> parent(numVertex);
+    vector<int> rank(numVertex, 0);
+    for (int i = 0; i < numVertex; ++i)
         parent[i] = i;
-        rank[i] = 0;
-    }
 
-    // Coleta todas as arestas do grafo
-    for (int i = 0; i < numVertex; i++) {
-        for (const auto& edge : adjList[i]) {
-            edges.push_back(edge);
+    int mstWeight = 0;
+    for (Edge& edge : edges) {
+        int u = edge.vertex;
+        int v = edge.id;
+        if (find(u, parent) != find(v, parent)) {
+            mstWeight += edge.weight;
+            merge(u, v, parent, rank);
         }
     }
-
-    // Ordena todas as arestas por peso
-    sort(edges.begin(), edges.end());
-
-    // Processa todas as arestas em ordem crescente
-    int i = 0; // SUSPEITO ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    for (const auto& edge : edges) {
-        int x = find(parent, i); // Encontra o conjunto de u
-        int y = find(parent, edge.vertex); // Encontra o conjunto de v
-
-        // Se adicionar esta aresta não cria um ciclo
-        if (x != y) {
-            result.push_back(edge);
-            Union(parent, rank, x, y); // Une os conjuntos
-        }
-        i++;
-    }
-    delete[]parent;
-    delete[]rank;
-
-    return result;
+    return mstWeight;
 }
 
 bool bfsMaxFlow(const vector<vector<int>>& capacity, const vector<vector<int>>& residual, int source, int sink, vector<int>& parent) {
