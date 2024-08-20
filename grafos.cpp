@@ -23,13 +23,22 @@ struct Edge {
         this->id = id;
     }
 
+    bool operator=(const Edge& other) const {
+        return vertex == other.vertex;
+    }
+
     bool operator<(const Edge& other) const {
-        return weight < other.weight; // necessário para o algoritmo de Kruskal
+        return vertex < other.vertex;
+    }
+
+    bool operator>(const Edge& other) const {
+        return vertex > other.vertex; 
     }
 };
 
 
 // dfs e bfs
+void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& reached);
 void DFS(int vertex, vector<Edge> *adjList, int numVertex, bool* visited);
 void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *lo, stack<int>& stack, bool *stackMember);
 void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
@@ -41,8 +50,9 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
 bool eulerian(vector<Edge> *adjList, int numVertex, string direction);
 map<int, vector<int>> tarjanStronglyComponents(vector<Edge> *adjList, int numVertex);
 void printDephTree(vector<Edge> *adjList, int numVertex);
+void printBreadthTree(vector<Edge> *adjList, int numVertex);
 vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex);
-vector<Edge>* transitiveClosure(vector<Edge> *adjList, int numVertex);
+void fechoTransitivo(vector<Edge> *adjList, int numVertex);
 
 // funções auxiliares
 int getVertexIncomingDegree(int vertex, vector<Edge> *adjList, int numVertex);
@@ -64,6 +74,7 @@ void DFSConnectedComponents(int vertex, vector<Edge> *adjList, vector<bool>& vis
 void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges);
 vector<Edge> getBridges(vector<Edge> *adjList, int numVertex);
 
+// 2 5 8 11 14
 int main() {
     int command, numVertex, numEdges, edgeId, vertexU, vertexV, weight;
     vector<Edge> *adjList = nullptr;
@@ -91,104 +102,85 @@ int main() {
 
     for (int i = 0; i < commands.size(); i++) {
         switch(commands[i]) {
-            case 0: {
-                // funcao 1 - paulo silveira - verificar se o grafo é conexo
-                cout << "1 - conectado: " << connected(adjList, numVertex, direction) << endl;
+            case 0: {// paulo silveira
+                cout << connected(adjList, numVertex, direction) << endl;
                 break;
             }
-            case 1: {
-                // funcao 2 - gabriel 
-                cout << "2 - bipartido:" << checkBipartite(adjList, numVertex) << endl;
+            case 1: {// gabriel 
+                cout << checkBipartite(adjList, numVertex) << endl;
                 break;
             }
-            case 2: {
-                // funcao 3 - paulo alves - eulerian
-                cout << "3 - euleriano: " << eulerian(adjList, numVertex, direction) << endl;
+            case 2: {// paulo alves
+                cout << eulerian(adjList, numVertex, direction) << endl;
                 break;
             }
-            case 3: {
-                // funcao 4 - paulo silveira
-                cout << "4 - contem ciclos: " << contemCiclo(adjList, numVertex, direction) << endl;
+            case 3: {// paulo silveira
+                cout << contemCiclo(adjList, numVertex, direction) << endl;
                 break;
             }
-            case 4: {
-                // funcao 5 - gabriel 
-                cout << "5 - connected components:" << countConnectedComponents(numVertex, adjList) << endl;
+            case 4: {// gabriel
+                if (direction.compare("nao_direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
+                    cout << countConnectedComponents(numVertex, adjList) << endl;
+                } else {
+                    cout << "-1" << endl;
+                }
                 break;
             }
-            case 5: {
-                // funcao 6 - paulo alves - strongly components
-                map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
-                cout << "6 - amount of strongly components: " << stronglyComponents.size() << endl;
+            case 5: {// paulo alves
+                if (direction.compare("direcionado") == 0) {
+                    map<int, vector<int>> stronglyComponents = tarjanStronglyComponents(adjList, numVertex);
+                    cout << stronglyComponents.size() << endl;
+                } else {
+                    cout << "-1" << endl;
+                }
                 break;
             }
-            case 6: {
-                // funcao 7 - paulo silveira
-                /*cout << "6 - ariculacoes: ";
-                vector<int> articulacoes = getArticulacoes(adjList, numVertex);
-                for (int i = 0; i < articulacoes.size(); i++) 
-                    cout << articulacoes[i] << " ";
-                cout << endl;*/
+            case 6: {// paulo silveira
+                cout << "-1" << endl;
                 break;
             }
-            case 7: {
-                // funcao 8 - gabriel
+            case 7: {// gabriel
                 vector<Edge> bridges = getBridges(adjList, numVertex);
-                cout << "7 - num bridges: " << bridges.size() << endl;
+                cout << "7: " << bridges.size() << endl;
                 break;
             }
-            case 8: {
-                // deep search tree
-                cout << "9 - arvore de busca em profundidade ";
+            case 8: {// paulo alves
                 printDephTree(adjList, numVertex);
                 break;
             }
-            case 9: {
-                // funcao 10 - paulo silveira
-                cout << "9 - arvore de busca em largura ";
+            case 9: {// paulo silveira
+                printBreadthTree(adjList, numVertex);
                 break;
             }
             case 10: {
-                // funcao 11 - gabriel
-                //cout << "10 - MST: " <<  kruskalMST(adjList, numVertex) <<  endl;
+                cout << "-1" << endl;
                 break;
             }
-            case 11: {
-                // funcao 12 - paulo alves - ordenação topologica
-                cout << "12 - topologial sort: ";
+            case 11: {// paulo alves
                 if (direction.compare("direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
                     // se o grafo for direciondo e nao possuir ciclos
                     vector<int> top = kahnTopologicalSort(adjList, numVertex);
 
-                    for (int i = 0; i < top.size(); i++) 
+                    for (int i = 0; i < top.size(); i++) {
                         cout << top[i] << " ";
+                    }
                     cout << endl;
                 } else {
                     cout << "-1" << endl;
                 }
                 break;
             }
-            case 12: {
-                // // funcao 13 - paulo silveira
-                // if (direction.compare("nao_direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
-                //     vector<int> distance = dijkstra(0, adjList, numVertex); // DijkstraCaminhoMinimo(adjList, numVertex);
-                //     for (int i = 0; i < distance.size(); i++) 
-                //         cout << "distancia do vertice 0 ate o vertice " << i << ": " << distance[i];
-                //     cout << endl;
-                // } else {
-                //     cout << "-1" << endl;
-                // }
+            case 12: { 
+                cout << "-1" << endl;
                 break;
             }
             case 13: {
+                cout << "-1" << endl;
                 break;
             }
-            case 14: {
-                // funcao 15 - paulo alves - fecho transitivo
-                cout << "15 - fecho transitivo: ";
+            case 14: {// paulo alves
                 if (direction.compare("direcionado") == 0) {
-                    vector<Edge> *newAdjList = transitiveClosure(adjList, numVertex);
-                    printAdjList(newAdjList, numVertex);
+                    fechoTransitivo(adjList, numVertex);
                 } else {
                     cout << "-1" << endl;
                 }
@@ -222,7 +214,7 @@ bool connected(vector<Edge> *adjList, int numVertex, string direction) {
         for (int i = 0; i < numVertex; i++) {
             for (int j = 0; j < newAdjList[i].size(); j++) {
                 Edge edge = newAdjList[i][j];
-                newAdjList[edge.vertex].push_back(Edge(edge.vertex, edge.weight, edge.id));
+                newAdjList[edge.vertex].push_back(Edge(i, edge.weight, edge.id));
             }
         }
 
@@ -333,6 +325,8 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
     sc.push(vertex);
     stackMember[vertex] = true;
 
+    sort(adjList[vertex].begin(), adjList[vertex].end());
+
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
 
@@ -394,9 +388,25 @@ bool stronglyConnected(vector<Edge> *adjList, int numVertex) {
     return true;
 }
 
+void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& reached) {
+    visited[vertex] = true;
+    reached.push_back(vertex);
+
+    sort(adjList[vertex].begin(), adjList[vertex].end());
+
+    for (int i = 0; i < adjList[vertex].size(); i++) {
+        int adjVertex = adjList[vertex][i].vertex;
+
+        if (!visited[adjVertex]) 
+            DFSFecho(adjVertex, adjList, numVertex, visited, reached);
+    }
+}
+
 /// dfs 
 void DFS(int vertex, vector<Edge> *adjList, int numVertex, bool* visited) {
     visited[vertex] = true;
+
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -421,6 +431,21 @@ void printDephTree(vector<Edge> *adjList, int numVertex) {
     cout << endl;
 }
 
+void printBreadthTree(vector<Edge> *adjList, int numVertex) {
+    int initialVertex = 0;
+    bool* visited = new bool[numVertex];
+    vector<int> order;
+    
+    for (int i = 0; i < numVertex; i++) 
+        visited[i] = false;
+
+    BFSTree(initialVertex, adjList, numVertex, visited, order);
+
+    for (int i = 0; i < order.size(); i++)
+        cout << order[i] << " ";
+    cout << endl;
+}
+
 void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order) {
     queue<int> q;
 
@@ -430,6 +455,8 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
     while (!q.empty()) {
         int vertex = q.front();
         q.pop();
+
+        sort(adjList[vertex].begin(), adjList[vertex].end());
 
         for (int i = 0; i < adjList[vertex].size(); i++) {
             int adjVertex = adjList[vertex][i].vertex;
@@ -445,6 +472,8 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
 
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order) {
     visited[vertex] = true;
+
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -504,6 +533,8 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
     
     visited[vertex] = true;
 
+    sort(adjList[vertex].begin(), adjList[vertex].end());
+
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
         
@@ -521,6 +552,8 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
 // grafos direcionados
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex, vector<string>& state) {
     state[vertex] = "GRAY";  // Marca o vértice como "em processo"
+
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -541,25 +574,69 @@ bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,
 
 // algoritmo de kahn para encontrar ordem topológica
 vector<int> kahnTopologicalSort(vector<Edge> *adjList, int numVertex) {
-    vector<int> top; // armazenar a ordenação topologica
-    bool *onTopList = new bool[numVertex];
-    vector<Edge> *newAdjList = new vector<Edge>[numVertex]; // clone da lista de adjacência
-    
-    for (int i = 0; i < numVertex; i++) {
-        newAdjList[i] = adjList[i];
-        onTopList[i] = false;
-    }   
+    vector<int> top; // armazenar a ordenação topológica
+    vector<int> inDegree(numVertex, 0); // grau de entrada dos vértices
+    vector<Edge> *newAdjList = new vector<Edge>[numVertex]; // armazenar a nova versao nao direcionada
+    stack<int> zeroDegreeQueue;
 
-    while (top.size() < numVertex) {
-        for (int i = 0; i < numVertex; i++) {
-            if (!onTopList[i] && getVertexIncomingDegree(i, newAdjList, numVertex) == 0) {
-                top.push_back(i);
-                onTopList[i] = true;
-                newAdjList[i].clear();           
+    for (int i = 0; i < numVertex; i++) 
+        newAdjList[i] = adjList[i];
+
+    // calcula o grau de entrada de cada vértice
+    for (int i = 0; i < numVertex; i++) {
+        for (int j = 0; j < adjList[i].size(); j++) {
+            int adjVertex = adjList[i][j].vertex;
+            inDegree[adjVertex]++; 
+        }
+    }
+
+    // calcula o grau de entrada de cada vértice
+    for (int i = 0; i < numVertex; i++) {
+        for (int j = 0; j < adjList[i].size(); j++) {
+            int adjVertex = adjList[i][j].vertex;
+            if (adjVertex == 0)
+                cout << "\n\ntem alguem apontando para o zero\n\n";
+        }
+    }
+
+    // adiciona todos os vértices com grau de entrada zero na fila
+    for (int i = 0; i < numVertex; i++) {
+        if (inDegree[i] == 0) {
+            zeroDegreeQueue.push(i);
+        }
+    }
+
+    // cout << "\n\nzero degree queue\n\n\n";
+    // for (int i = 0; i  <zeroDegreeQueue.size(); i++) {
+    //     cout << zeroDegreeQueue.front() << " ";
+    //     zeroDegreeQueue.pop();
+    // }
+
+    while (!zeroDegreeQueue.empty()) {
+        int u = zeroDegreeQueue.top();
+        zeroDegreeQueue.pop();
+        top.push_back(u);
+
+        //sort(adjList[u].begin(), adjList[u].end());
+
+        // reduz o grau de entrada dos vizinhos
+        for (int i = 0; i < newAdjList[u].size(); i++) {
+            int adjVertex = newAdjList[u][i].vertex;
+
+            inDegree[adjVertex]--;
+
+            if (inDegree[adjVertex] == 0) {
+                zeroDegreeQueue.push(adjVertex);
             }
         }
     }
-    
+
+    // Verifica se há ciclos no grafo
+    if (top.size() != numVertex) {
+        // O grafo contém ciclos e a ordenação topológica não é possível
+        top.clear();
+    }
+
     return top;
 }
 
@@ -574,26 +651,19 @@ int getVertexIncomingDegree(int vertex, vector<Edge> *adjList, int numVertex) {
     return count;
 }
 
-vector<Edge>* transitiveClosure(vector<Edge> *adjList, int numVertex) {
-    vector<Edge> *newAdjList = new vector<Edge>[numVertex];
+void fechoTransitivo(vector<Edge> *adjList, int numVertex) {
+    bool *visited = new bool[numVertex];
+    vector<int> fechoTransitivo;
 
-    for (int i = 0; i < numVertex; i++) {
-        bool *visited = new bool[numVertex];
+    for (int j = 0; j < numVertex; j++)
+        visited[j] = false;
 
-        for (int j = 0; j < numVertex; j++)
-            visited[j] = false;
-
-        DFS(i, adjList, numVertex, visited);
-
-        for (int j = 0; j < numVertex; j++) {
-            if (j == i) continue;
-
-            if (visited[j])
-                newAdjList[i].push_back(Edge(j, 0));
-        }
+    DFSFecho(0, adjList, numVertex, visited, fechoTransitivo);
+ 
+    for (int j = 0; j < fechoTransitivo.size(); j++) {
+        if (fechoTransitivo[j] != 0)
+            cout << fechoTransitivo[j] << " ";
     }
-
-    return newAdjList;
 }
 
 void printAdjList(vector<Edge> *adjList, int numVertex) {
