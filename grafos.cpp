@@ -37,7 +37,7 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
 void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,vector<string>& state);
-bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited);
+bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited, int parent);
 void DFSConnectedComponents(int vertex, vector<Edge> *adjList, vector<bool>& visited);
 void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges);
 void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
@@ -109,7 +109,7 @@ int main() {
                 cout << connected(adjList, numVertex, direction) << endl;
                 break;
             }
-            case 1: {// gabriel 
+            case 1: {// gabriel
                 cout << checkBipartite(adjList, numVertex) << endl;
                 break;
             }
@@ -159,7 +159,7 @@ int main() {
                 if (direction.compare("nao_direcionado") == 0)
                     getBridges(adjList, numVertex);
                 else
-                    cout << "-1";
+                    cout << "-1" << endl;
                 break;
             }
             case 8: {// paulo alves
@@ -181,10 +181,11 @@ int main() {
                 break;
             }
             case 11: {// paulo alves
-                if (direction.compare("direcionado") == 0) {
+                if (direction.compare("direcionado") == 0 and !contemCiclo(adjList, numVertex, direction)) {
                     vector<int> top = kahnOrdernacaoTopologica(adjList, numVertex);
                     for (int i = 0; i < top.size(); i++) 
                         cout << top[i] << " ";
+                    cout << endl;
                 } else {
                     cout << "-1" << endl;
                 }
@@ -352,7 +353,7 @@ void DFSTarjan(int vertex, vector<Edge> *adjList, int numVertex, int *pre, int *
     sc.push(vertex);
     stackMember[vertex] = true;
 
-    // // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -419,7 +420,7 @@ void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, v
     visited[vertex] = true;
     reached.push_back(vertex);
 
-    // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -433,7 +434,7 @@ void DFSFecho(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, v
 void DFS(int vertex, vector<Edge> *adjList, int numVertex, bool* visited) {
     visited[vertex] = true;
 
-    // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -483,7 +484,7 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
         int vertex = q.front();
         q.pop();
 
-        // sort(adjList[vertex].begin(), adjList[vertex].end());
+        sort(adjList[vertex].begin(), adjList[vertex].end());
 
         for (int i = 0; i < adjList[vertex].size(); i++) {
             int adjVertex = adjList[vertex][i].vertex;
@@ -500,7 +501,7 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order) {
     visited[vertex] = true;
 
-    // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -531,9 +532,11 @@ bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction) {
         for (int i = 0; i < numVertex; i++)
             visited[i] = false;
 
-        for (int i = 0; i < numVertex; ++i) {
-            if (!visited[i] && DFSCiclo(i, adjList, numVertex, visited)) {
-                return true;
+        for (int i = 0; i < numVertex; i++) {
+            if (!visited[i]) {
+                if (DFSCiclo(i, adjList, numVertex, visited, i)) {
+                    return true;
+                }
             }    
         }
 
@@ -544,8 +547,10 @@ bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction) {
     vector<string> state(numVertex, "WHITE");
 
     for (int i = 0; i < numVertex; i++) {
-        if (state[i].compare("WHITE") == 0 && DFSCicloGrafoDirecionado(i, adjList, numVertex, state)) {
-            return true;
+        if (state[i].compare("WHITE") == 0) {
+            if (DFSCicloGrafoDirecionado(i, adjList, numVertex, state)) {
+                return true;
+            }
         }
     }
 
@@ -554,20 +559,19 @@ bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction) {
 
 // dfs para encontrar ciclos
 // grafos nao direcionados
-bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) {
-    // DFS(v, pai):    
-    // visitado[v] = true
-    
+bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited, int parent) { 
     visited[vertex] = true;
 
-    // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
         
-        if (!visited[adjVertex] && DFSCiclo(adjVertex, adjList, numVertex, visited)) {
-            return true;
-        } else if (adjVertex != vertex) {
+        if (!visited[adjVertex]) {
+            if (DFSCiclo(adjVertex, adjList, numVertex, visited, vertex)) {
+                return true;
+            }
+        } else if (adjVertex != parent) {
             return true; // Se adjVertex foi visitado e não é o pai, há um ciclo
         }
     }
@@ -580,7 +584,7 @@ bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited) 
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex, vector<string>& state) {
     state[vertex] = "GRAY";  // Marca o vértice como "em processo"
 
-    // sort(adjList[vertex].begin(), adjList[vertex].end());
+    sort(adjList[vertex].begin(), adjList[vertex].end());
 
     for (int i = 0; i < adjList[vertex].size(); i++) {
         int adjVertex = adjList[vertex][i].vertex;
@@ -639,12 +643,6 @@ vector<int> kahnOrdernacaoTopologica(vector<Edge> *adjList, int numVertex) {
                 zeroDegreeQueue.push(adjVertex);
             }
         }
-    }
-
-    // Verifica se há ciclos no grafo
-    if (top.size() != numVertex) {
-        // O grafo contém ciclos e a ordenação topológica não é possível
-        top.clear();
     }
 
     return top;
