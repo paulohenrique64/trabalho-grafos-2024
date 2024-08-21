@@ -1,3 +1,14 @@
+// UFLA        Universidade Federal de Lavras
+// DCC         Departamento de Ciência da Computação
+// Disciplina  GCC218 - Algoritmos em Grafos
+// Professor   Mayron
+
+// Trabalho de Grafos
+// Integrantes:
+// Gabriel Jardim de Souza           - Matrícula: 202310530 - Turma 10A
+// Paulo Henrique dos Anjos Silveira - Matrícula: 202310533 - Turma 10A
+// Paulo Henrique Ribeiro Alves      - Matrícula: 202310171 - Turma 10A
+
 #include <iostream>
 #include <vector>
 #include <stack>
@@ -215,15 +226,6 @@ int main() {
 
     return 0;
 }
-
-//
-//
-//
-//
-// PARTE PAULO HENRIQUE
-//
-//
-//
 
 bool connected(vector<Edge> *adjList, int numVertex, string direction) {
     bool *visited = new bool[numVertex];
@@ -679,15 +681,6 @@ void imprimirListaAdjacencia(vector<Edge> *adjList, int numVertex) {
     }
 }
 
-//
-//
-//
-//
-// PARTE PAULO SILVEIRA
-//
-//
-//
-
 // retorna um vetor contendo todos vertices articulacoes
 vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex) {
     vector<int> visitedOrder(numVertex, -1), low(numVertex, -1), parent(numVertex, -1), ans;
@@ -773,15 +766,6 @@ void dijkstra(int org, vector<Edge>* adjList, int numVertex) {
         cout << dist[numVertex - 1] << endl;
     }
 }
-
-//
-//
-//
-//
-// PARTE GABRIEL
-//
-//
-//
 
 //Função para verificar se o grafo é bipartido
 bool checkBipartite(vector<Edge> *adjList, int numVertex) {
