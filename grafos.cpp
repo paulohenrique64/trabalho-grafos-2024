@@ -181,7 +181,7 @@ int main() {
                 break;
             }
             case 11: {// paulo alves
-                if (direction.compare("direcionado") == 0 and !contemCiclo(adjList, numVertex, direction)) {
+                if (direction.compare("direcionado") == 0 && !contemCiclo(adjList, numVertex, direction)) {
                     vector<int> top = kahnOrdernacaoTopologica(adjList, numVertex);
                     for (int i = 0; i < top.size(); i++) 
                         cout << top[i] << " ";
@@ -192,18 +192,14 @@ int main() {
                 break;
             }
             case 12: {// paulo silveira
-                if (direction.compare("nao_direcionado") == 0) {
-                    dijkstra(0, adjList, numVertex);
-                } else {
-                    cout << "-1" << endl;
-                }
+                dijkstra(0, adjList, numVertex);
                 break;
             }
             case 13: {// gabriel
                 if (direction.compare("nao_direcionado") == 0)
                     cout << "-1" << endl;
                 else
-                    cout << edmondsKarp(capacity, 0, numVertex - 1);
+                    cout << edmondsKarp(capacity, 0, numVertex - 1) << endl;
                 break;
             }
             case 14: {// paulo alves
