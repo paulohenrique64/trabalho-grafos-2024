@@ -21,17 +21,19 @@
 
 using namespace std;
 
+//Estrutura que armazena as informações da aresta
 struct Aresta {
     int vertice;
     int peso;
     int id;
 
+    //construtor
     Aresta(int vertice, int peso, int id = -1) {
-        this->vertice = vertice;
-        this->peso = peso;
-        this->id = id;
+        this->vertice = vertice;//armazena o vértice
+        this->peso = peso;//armazena o peso
+        this->id = id;//armazena o id da aresta
     }
-
+    //sobrecargas
     bool operator<(const Aresta& other) const {
         return vertice < other.vertice; 
     }
@@ -41,7 +43,7 @@ struct Aresta {
     }
 };
 
-// funcoes para buscas em larguras e buscas em profundidades adaptadas
+// funções e métodos de dfs e bfs
 void DFSFecho(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado, vector<int>& reached);
 void DFS(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado);
 void DFSTarjan(int vertice, vector<Aresta> *listaAdj, int numVertices, int *pre, int *lo, stack<int>& stack, bool *stackMember);
@@ -98,7 +100,7 @@ int main() {
     cin >> numVertices >> numArestas >> tipoGrafo; 
     listaAdj = new vector<Aresta>[numVertices]; 
 
-    // Vetor usado em fluxo máximo
+    // Vetor usado em fluxo máximo e kruskal
     vector<vector<int>> capacity(numVertices, vector<int>(numVertices, 0)); 
 
     for (int i = 0; i < numArestas; i++) {
@@ -226,7 +228,7 @@ int main() {
 
     return 0;
 }
-
+//Verifica se o grafo é conectado para direcionado e não direcionado
 bool conectado(vector<Aresta> *listaAdj, int numVertices, string tipoGrafo) {
     bool *visitado = new bool[numVertices];
 
@@ -266,7 +268,7 @@ bool conectado(vector<Aresta> *listaAdj, int numVertices, string tipoGrafo) {
 }
 
 
-// verificar se o grafo é eulerianoo
+// verificar se o grafo é euleriano
 bool euleriano(vector<Aresta> *listaAdj, int numVertices, string tipoGrafo) {
     int numVerticesGrauImpar = 0;
 
@@ -426,6 +428,7 @@ bool fortementeConectado(vector<Aresta> *listaAdj, int numVertices) {
     return true;
 }
 
+//Dfs para calcular fecho transitivo
 void DFSFecho(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado, vector<int>& reached) {
     visitado[vertice] = true;
     reached.push_back(vertice);
@@ -440,7 +443,7 @@ void DFSFecho(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visi
     }
 }
 
-// dfs generica
+// Dfs generica
 void DFS(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado) {
     visitado[vertice] = true;
 
@@ -454,6 +457,7 @@ void DFS(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado)
     }
 }
 
+//Chama DFS e imprime árvore de profundidade 
 void imprimirArvoreProfundidade(vector<Aresta> *listaAdj, int numVertices) {
     int initialvertice = 0;
     bool* visitado = new bool[numVertices];
@@ -470,7 +474,7 @@ void imprimirArvoreProfundidade(vector<Aresta> *listaAdj, int numVertices) {
 
     delete[] visitado;
 }
-
+//Chama BFS e imprime árvore de largura 
 void imprimirArvoreLargura(vector<Aresta> *listaAdj, int numVertices) {
     int initialvertice = 0;
     bool* visitado = new bool[numVertices];
@@ -488,6 +492,7 @@ void imprimirArvoreLargura(vector<Aresta> *listaAdj, int numVertices) {
     delete[] visitado;
 }
 
+//Realiza bfs para árvore de largura
 void BFSArvore(int initialvertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado, vector<int>& ordemVisitacao) {
     queue<int> q;
 
@@ -512,6 +517,7 @@ void BFSArvore(int initialvertice, vector<Aresta> *listaAdj, int numVertices, bo
     }
 }
 
+//Realiza dfs para árvore de profundidade
 void DFSArvore(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* visitado, vector<int>& ordemVisitacao) {
     visitado[vertice] = true;
 
@@ -526,7 +532,7 @@ void DFSArvore(int vertice, vector<Aresta> *listaAdj, int numVertices, bool* vis
         }
     }
 }
-
+// transposta de uma lista de adj
 vector<Aresta>* transposta(vector<Aresta> *listaAdj, int numVertices) {
     vector<Aresta> *trans = new vector<Aresta>[numVertices];
 
@@ -664,6 +670,7 @@ vector<int> kahnOrdenacaoTopologica(vector<Aresta> *listaAdj, int numVertices) {
     return top;
 }
 
+// Conta o número de vértices de entrada
 int numeroVerticesEntrada(int vertice, vector<Aresta> *listaAdj, int numVertices) {
     int cont = 0; 
 
@@ -675,6 +682,7 @@ int numeroVerticesEntrada(int vertice, vector<Aresta> *listaAdj, int numVertices
     return cont;
 }
 
+//Realiza e imprime o fecho
 void fechoTransitivo(vector<Aresta> *listaAdj, int numVertices) {
     bool *visitado = new bool[numVertices];
     vector<int> fechoTransitivo;
@@ -692,6 +700,7 @@ void fechoTransitivo(vector<Aresta> *listaAdj, int numVertices) {
     delete[] visitado;
 }
 
+// Imprime a lista de adjacência
 void imprimirListaAdjacencia(vector<Aresta> *listaAdj, int numVertices) {
     for (int i = 0; i < numVertices; i++) {
         cout << "[" << i << "] -> ";
@@ -747,6 +756,7 @@ void DFSArticulacoes(int u, vector<Aresta>* listaAdj, vector<int>& ordemVisitaca
     }  
 }
 
+//Realiza o caminho mínimo usando dijkstra
 void dijkstra(int org, vector<Aresta>* listaAdj, int numVertices) {
     vector<int> dist(numVertices, INT_MAX); 
     vector<bool> visitado(numVertices, false);
@@ -845,7 +855,7 @@ int contarComponentesConectados(int numVertices, vector<Aresta> *listaAdj) {
     return conectadoComponents;
 }
 
-
+// Realiza uma DFS para o algoritmo de pontes
 void DFSPontes(int u, int pai, vector<Aresta> *listaAdj, int numVertices, vector<int>& ordemVisitacao, vector<int>& low, vector<Aresta>& pontes) {
     static int time = 0;
     ordemVisitacao[u] = low[u] = ++time;
@@ -867,6 +877,7 @@ void DFSPontes(int u, int pai, vector<Aresta> *listaAdj, int numVertices, vector
     }
 }
 
+// Realiza o algoritmo pontos e imprime as pontes
 void retornarPontes(vector<Aresta> *listaAdj, int numVertices) {
     vector<int> ordemVisitacao(numVertices, -1);
     vector<int> low(numVertices, -1);
@@ -887,13 +898,13 @@ void retornarPontes(vector<Aresta> *listaAdj, int numVertices) {
     }
     cout << endl;
 }
-
+//Função para encontrar o pai de um conjunto
 int find(int u, vector<int>& pai) {
     if (u != pai[u])
         pai[u] = find(pai[u], pai);
     return pai[u];
 }
-
+//Função para unir subconjuntos
 void merge(int u, int v, vector<int>& pai, vector<int>& rank) {
     int rootU = find(u, pai);
     int rootV = find(v, pai);
@@ -915,6 +926,7 @@ bool compararArestasPorPeso(const Aresta& a, const Aresta& b) {
     return a.peso < b.peso;
 }
 
+//Algoritmo de kruskal que retorna o peso 
 int kruskal(int numVertices, vector<vector<int>>& capacity) {
     vector<Aresta> Arestas;
 
@@ -949,6 +961,7 @@ int kruskal(int numVertices, vector<vector<int>>& capacity) {
     return mstpeso;
 }
 
+// Realiza BFS para fluxo máximo
 bool bfsMaxFlow(const vector<vector<int>>& capacity, const vector<vector<int>>& residual, int source, int sink, vector<int>& pai) {
     int numVertices = capacity.size();
     vector<bool> visitado(numVertices, false);
