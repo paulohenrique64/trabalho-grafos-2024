@@ -4,6 +4,7 @@
 // Professor   Mayron
 
 // Trabalho de Grafos
+// Grupo: G
 // Integrantes:
 // Gabriel Jardim de Souza           - Matrícula: 202310530 - Turma 10A
 // Paulo Henrique dos Anjos Silveira - Matrícula: 202310533 - Turma 10A
