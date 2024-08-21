@@ -10,9 +10,6 @@
 
 using namespace std;
 
-int order; // para o algoritmo de tarjan
-int time_s; // para o algoritomo de articulações
-
 struct Edge {
     int vertex;
     int weight;
@@ -24,17 +21,13 @@ struct Edge {
         this->id = id;
     }
 
-    bool operator=(const Edge& other) const {
-        return vertex == other.vertex;
+    bool operator<(const Edge& other) const {
+        return vertex < other.vertex; 
     }
 
-    // bool operator<(const Edge& other) const {
-    //     return weight < other.weight; // necessário para o algoritmo de Kruskal
-    // }
-
-    // bool operator>(const Edge& other) const {
-    //     return this->weight > other.weight; //necessario para o algortimo de dijkistra
-    // }
+    bool operator>(const Edge& other) const {
+        return vertex > other.vertex;
+    }
 };
 
 // dfs e bfs
@@ -45,6 +38,9 @@ void BFSTree(int initialVertex, vector<Edge> *adjList, int numVertex, bool* visi
 void DFSTree(int vertex, vector<Edge> *adjList, int numVertex, bool* visited, vector<int>& order);
 bool DFSCicloGrafoDirecionado(int vertex, vector<Edge> *adjList,  int numVertex,vector<string>& state);
 bool DFSCiclo(int vertex, vector<Edge> *adjList,  int numVertex, bool *visited);
+void DFSConnectedComponents(int vertex, vector<Edge> *adjList, vector<bool>& visited);
+void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges);
+void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
 
 // funções essenciais
 bool euleriano(vector<Edge> *adjList, int numVertex, string direction);
@@ -53,29 +49,26 @@ void imprimirArvoreProfundidade(vector<Edge> *adjList, int numVertex);
 void imprimirArvoreLargura(vector<Edge> *adjList, int numVertex);
 vector<int> kahnOrdernacaoTopologica(vector<Edge> *adjList, int numVertex);
 void fechoTransitivo(vector<Edge> *adjList, int numVertex);
-
-// funções auxiliares
-int numeroVerticesEntrada(int vertex, vector<Edge> *adjList, int numVertex);
-bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction);
-vector<Edge>* transposta(vector<Edge> *adjList, int numVertex);
-bool fortementeConectado(vector<Edge> *adjList, int numVertex);
-void imprimirListaAdjacencia(vector<Edge> *adjList, int numVertex);
-
-// funcoes do paulo silveira
-bool connected(vector<Edge> *adjList, int numVertex, string direction);
-vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex);
-void DFSArticulacoes(int u, vector<Edge>* adjList, vector<int>& visitedOrder, vector<int>& low, vector<int>& parent, vector<int>& ans);
-void dijkstra(int org, vector<Edge>* adjList, int numVertex);
-//void dijkstra(int org, vector<pair<int, int>>* adjList, int numVertex);
-
-// funções do gabriel
-int edmondsKarp(const vector<vector<int>>& capacity, int source, int sink);
 int kruskal(int numVertex, vector<vector<int>>& capacity);
+int edmondsKarp(const vector<vector<int>>& capacity, int source, int sink);
 void getBridges(vector<Edge> *adjList, int numVertex);
 bool checkBipartite(vector<Edge> *adjList, int numVertex);
 int countConnectedComponents(int numVertex, vector<Edge> *adjList);
-void DFSConnectedComponents(int vertex, vector<Edge> *adjList, vector<bool>& visited);
-void DFSBridges(int u, int parent, vector<Edge> *adjList, int numVertex, vector<int>& visitedOrder, vector<int>& low, vector<Edge>& bridges);
+bool connected(vector<Edge> *adjList, int numVertex, string direction);
+vector<int> getArticulacoes(vector<Edge> *adjList, int numVertex);
+void dijkstra(int org, vector<Edge>* adjList, int numVertex);
+bool contemCiclo(vector<Edge> *adjList, int numVertex, string direction);
+
+// funções auxiliares
+int numeroVerticesEntrada(int vertex, vector<Edge> *adjList, int numVertex);
+vector<Edge>* transposta(vector<Edge> *adjList, int numVertex);
+bool fortementeConectado(vector<Edge> *adjList, int numVertex);
+void imprimirListaAdjacencia(vector<Edge> *adjList, int numVertex);
+int find(int u, vector<int>& parent);
+bool compareEdges(const Edge& a, const Edge& b);
+
+int order; // para o algoritmo de tarjan
+int time_s; // para o algoritomo de articulações
 
 int main() {
     int command, numVertex, numEdges, edgeId, vertexU, vertexV, weight;
@@ -83,21 +76,26 @@ int main() {
     vector<int> commands;
     string line, direction;
 
-    getline(cin, line); // ler a lista de comandos passada na entrada padrao   
+    // ler a lista de comandos passada na entrada padrao   
+    getline(cin, line); 
 
     stringstream buffer(line);
     while (buffer >> command)
         commands.push_back(command);
 
-    cin >> numVertex >> numEdges >> direction; // ler o numero de vertices, numero de arestas e se o grafo e direcionado
+    // ler o numero de vertices, numero de arestas e se o grafo e direcionado
+    cin >> numVertex >> numEdges >> direction; 
     adjList = new vector<Edge>[numVertex]; 
 
-    vector<vector<int>> capacity(numVertex, vector<int>(numVertex, 0)); // Vetor usado em fluxo máximo
-    vector<Edge> edges; // Vetor de arestas para o algoritmo de Kruskal
+    // Vetor usado em fluxo máximo
+    vector<vector<int>> capacity(numVertex, vector<int>(numVertex, 0)); 
 
     for (int i = 0; i < numEdges; i++) {
         // preenche a lista de adjacência
         cin >> edgeId >> vertexU >> vertexV >> weight;
+
+        // usado em fluxo máximo e kruskal
+        capacity[vertexU][vertexV] = weight; 
 
         adjList[vertexU].push_back(Edge(vertexV, weight, edgeId));
 
@@ -176,10 +174,11 @@ int main() {
                 // funcao 11 - gabriel
                 if (direction.compare("nao_direcionado") == 0) {
                     int mstWeight = kruskal(numVertex, capacity);
-                    cout << "11 - Kruskal MST weight: " << mstWeight << endl;
+                    cout << mstWeight << endl;
+                } else {
+                    cout << "-1" << endl;
                 }
                 break;
-
             }
             case 11: {// paulo alves
                 if (direction.compare("direcionado") == 0) {
@@ -192,16 +191,14 @@ int main() {
                 break;
             }
             case 12: {// paulo silveira
-                //vector<pair<int, int>>* adjList = adjList;
                 if (direction.compare("nao_direcionado") == 0) {
                     dijkstra(0, adjList, numVertex);
-
                 } else {
                     cout << "-1" << endl;
                 }
                 break;
             }
-            case 13: {
+            case 13: {// gabriel
                 if (direction.compare("nao_direcionado") == 0)
                     cout << "-1" << endl;
                 else
@@ -898,6 +895,7 @@ int find(int u, vector<int>& parent) {
 void merge(int u, int v, vector<int>& parent, vector<int>& rank) {
     int rootU = find(u, parent);
     int rootV = find(v, parent);
+
     if (rootU != rootV) {
         if (rank[rootU] < rank[rootV])
             parent[rootU] = rootV;
@@ -910,8 +908,14 @@ void merge(int u, int v, vector<int>& parent, vector<int>& rank) {
     }
 }
 
+// Função de comparação para o algoritmo de Kruskal
+bool compareEdges(const Edge& a, const Edge& b) {
+    return a.weight < b.weight;
+}
+
 int kruskal(int numVertex, vector<vector<int>>& capacity) {
     vector<Edge> edges;
+
     for (int u = 0; u < numVertex; ++u) {
         for (int v = 0; v < numVertex; ++v) {
             if (capacity[u][v] > 0) {
@@ -920,22 +924,26 @@ int kruskal(int numVertex, vector<vector<int>>& capacity) {
         }
     }
 
-    // sort(edges.begin(), edges.end());
+    sort(edges.begin(), edges.end(), compareEdges);
 
     vector<int> parent(numVertex);
     vector<int> rank(numVertex, 0);
+
     for (int i = 0; i < numVertex; ++i)
         parent[i] = i;
 
     int mstWeight = 0;
+
     for (Edge& edge : edges) {
         int u = edge.vertex;
         int v = edge.id;
+
         if (find(u, parent) != find(v, parent)) {
             mstWeight += edge.weight;
             merge(u, v, parent, rank);
         }
     }
+
     return mstWeight;
 }
 
