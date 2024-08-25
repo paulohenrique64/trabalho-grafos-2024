@@ -15,7 +15,7 @@ Para executar
 Considerando um grafo G = (V,E) não-direcionado e não-ponderado, V = {0,1,2,3}
 e E = {(0,1), (1,2), (1,3), (2,3)}, tem-se:
 ```
-1 3 6 9
+1 2 3 4
 4 4
 nao_direcionado
 0 0 1 1
@@ -23,8 +23,8 @@ nao_direcionado
 2 1 3 1
 3 2 3 1
 ```
-Essa estrutura segue este padrao
-> funcao_1 funcao_3 funcao_6 funcao_9
+Esta estrutura segue este padrao
+> funcao_0 funcao_1 funcao_2 ... <br>
 > vertices arestas <br>
 > direcionado ou nao_direcionado <br>
 > id_aresta vértice_u vértice_v peso_da_aresta <br>
